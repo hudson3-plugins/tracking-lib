@@ -82,11 +82,16 @@ def writereport(dict, dir):
 		print >>f, '</tr>'
 		for key in sorted(dict.keys()):
 			row = dict[key]
+			hversion = row['hversion']
+			jversion = row['jversion']
+			td = '<td>'
+			if cmpversion(hversion, jversion) < 0:
+				td = '<td bgcolor="#FFFFCC">'
 			if row['hversion'] != 'None':
 				print >>f, '<tr>'
-				print >>f, '<td>'+key+'</td>'
-				print >>f, '<td>'+row['hversion']+'</td>'
-				print >>f, '<td>'+row['jversion']+'</td>'
+				print >>f, td+key+'</td>'
+				print >>f, td+hversion+'</td>'
+				print >>f, td+jversion+'</td>'
 				print >>f, '</tr>'
 		print >>f, '</table>'
 	print >>f, '</body>'
