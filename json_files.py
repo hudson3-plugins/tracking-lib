@@ -1,10 +1,13 @@
 import json
 
 def loadFromJson(filename):
-	f = open(filename, 'r')
-	object = json.load(f)
-	f.close()
-	return object
+	try:
+		f = open(filename, 'r')
+		object = json.load(f)
+		f.close()
+		return object
+	except IOError:
+		return None
 
 def dumpAsJson(filename, array):
 	dump = json.dumps(array, sort_keys = True, indent = 4)
