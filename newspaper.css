@@ -1,4 +1,4 @@
-#newspaper-a {
+#newspaper {
     font-family:"Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
     font-size:12px;
     width:480px;
@@ -7,18 +7,18 @@
     border:1px solid #69c;
     margin:20px;
 }
-#newspaper-a th {
+#newspaper th {
     font-weight:normal;
     font-size:14px;
     color:#039;
     border-bottom:1px dashed #69c;
     padding:12px 17px;
 }
-#newspaper-a td {
+#newspaper td {
     color:#669;
     padding:7px 17px;
 }
-#newspaper-a tbody tr:hover td {
+#newspaper tbody tr:hover td {
     color:#339;
     background:#d0dafd;
 }

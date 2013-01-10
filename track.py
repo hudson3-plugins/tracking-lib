@@ -4,7 +4,7 @@
 # and there is a corresponding hudson plugin and its
 # version is less than the new jenkins version
 
-import subprocess, os, sys, re
+import subprocess, os, sys, re, shutil
 from json_files import *
 from read_update_center import *
 from cmpversion import *
@@ -40,7 +40,7 @@ for key, jplugin in jplugins.items():
 			# this is a reportable change!
 			changes[key] = change = {}
 			change['hversion'] = hversion
-			change['jversion'] = jversion	
+			change['jversion'] = jversion
 	status[key] = stat = {}
 	stat['jversion'] = jversion
 	if hplugin:
@@ -59,6 +59,43 @@ dumpAsJson('changes.json', changes)
 dumpAsJson('status.json', status)
 
 print str(len(changes)), 'plugins changed and Jenkins version > Hudson version'
-					
+
+def writereport(dict, dir):
+	shutil.rmtree(dir, True)
+	os.makedirs(dir)
+	# job checks out code into tracking folder
+	shutil.copyfile('tracking/newspaper.css', dir+'/newspaper.css')
+	f = open(dir+'/index.html', 'w')
+	print >>f, '<html>'
+	print >>f, '<head>'
+	print >>f, '<link rel="stylesheet" type="text/css" href="newspaper.css">'
+	print >>f, '</head>'
+	print >>f, '<body>'
+	if len(dict) == 0:
+		print >>f, '<h1>No recent changes</h1>'
+	else:
+		print >>f, '<table id="newspaper">'
+		print >>f, '<tr>'
+		print >>f, '<th>Plugin</th>'
+		print >>f, '<th>Hudson Version</th>'
+		print >>f, '<th>Jenkins Version</th>'
+		print >>f, '</tr>'
+		for key in sorted(dict.keys()):
+			row = dict[key]
+			if row['hversion'] != 'None':
+				print >>f, '<tr>'
+				print >>f, '<td>'+key+'</td>'
+				print >>f, '<td>'+row['hversion']+'</td>'
+				print >>f, '<td>'+row['jversion']+'</td>'
+				print >>f, '</tr>'
+		print >>f, '</table>'
+	print >>f, '</body>'
+	print >>f, '</html>'
+	f.close()
+
+writereport(changes, 'htmlchanges')
+writereport(status,  'htmlstatus')
+
+						
 						
 					
