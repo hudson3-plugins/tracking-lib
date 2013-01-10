@@ -72,8 +72,9 @@ def writereport(dict, dir, title):
 	print >>f, '<link rel="stylesheet" type="text/css" href="newspaper.css">'
 	print >>f, '</head>'
 	print >>f, '<body>'
+	print >>f, '<hi>'+title+'</h1>'
 	if len(dict) == 0:
-		print >>f, '<h1>No recent changes</h1>'
+		print >>f, '<h3>No recent changes</h3>'
 	else:
 		print >>f, '<table id="newspaper">'
 		print >>f, '<tr>'
@@ -99,7 +100,7 @@ def writereport(dict, dir, title):
 	print >>f, '</html>'
 	f.close()
 
-writereport(changes, 'htmlchanges', 'Recent Changes')
+writereport(changes, 'htmlchanges', 'Recent Plugin Changes')
 writereport(status,  'htmlstatus', 'All Hudson Plugins')
 
 						
