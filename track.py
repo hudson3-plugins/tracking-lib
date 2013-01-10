@@ -60,7 +60,7 @@ dumpAsJson('status.json', status)
 
 print str(len(changes)), 'plugins changed and Jenkins version > Hudson version'
 
-def writereport(dict, dir):
+def writereport(dict, dir, title):
 	shutil.rmtree(dir, True)
 	os.makedirs(dir)
 	# job checks out code into tracking folder
@@ -68,6 +68,7 @@ def writereport(dict, dir):
 	f = open(dir+'/index.html', 'w')
 	print >>f, '<html>'
 	print >>f, '<head>'
+	print >>f, '<title>'+title+'</title>'
 	print >>f, '<link rel="stylesheet" type="text/css" href="newspaper.css">'
 	print >>f, '</head>'
 	print >>f, '<body>'
@@ -98,8 +99,8 @@ def writereport(dict, dir):
 	print >>f, '</html>'
 	f.close()
 
-writereport(changes, 'htmlchanges')
-writereport(status,  'htmlstatus')
+writereport(changes, 'htmlchanges', 'Recent Changes')
+writereport(status,  'htmlstatus', 'All Hudson Plugins')
 
 						
 						
