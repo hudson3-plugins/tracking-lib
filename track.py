@@ -72,11 +72,11 @@ def writereport(dict, dir, title):
 	print >>f, '<link rel="stylesheet" type="text/css" href="newspaper.css">'
 	print >>f, '</head>'
 	print >>f, '<body>'
-	print >>f, '<h1>'+title+'</h1>'
 	if len(dict) == 0:
 		print >>f, '<h3>No recent changes</h3>'
 	else:
 		print >>f, '<table id="newspaper">'
+		print >>f, '<caption>'+title+'</caption>'
 		print >>f, '<tr>'
 		print >>f, '<th>Plugin</th>'
 		print >>f, '<th>Hudson Version</th>'
