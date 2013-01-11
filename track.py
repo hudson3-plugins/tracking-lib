@@ -64,12 +64,18 @@ def writereport(dict, dir, title):
 	shutil.rmtree(dir, True)
 	os.makedirs(dir)
 	# job checks out code into tracking folder
-	shutil.copyfile('tracking/newspaper.css', dir+'/newspaper.css')
+	# shutil.copyfile('tracking/newspaper.css', dir+'/newspaper.css')
 	f = open(dir+'/index.html', 'w')
 	print >>f, '<html>'
 	print >>f, '<head>'
 	print >>f, '<title>'+title+'</title>'
-	print >>f, '<link rel="stylesheet" type="text/css" href="newspaper.css">'
+	# print >>f, '<link rel="stylesheet" type="text/css" href="newspaper.css">'
+	print >>f, '<style type="text/css">'
+	css = open('tracking/newspaper.css')
+	for line in css:
+		print >>f, line.rstrip()
+	css.close()
+	print >>f, '</style>'
 	print >>f, '</head>'
 	print >>f, '<body>'
 	if len(dict) == 0:
