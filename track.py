@@ -58,8 +58,6 @@ for key, hplugin in hplugins.items():
 dumpAsJson('changes.json', changes)
 dumpAsJson('status.json', status)
 
-print str(len(changes)), 'plugins changed and Jenkins version > Hudson version'
-
 def writereport(dict, dir, title):
 	shutil.rmtree(dir, True)
 	os.makedirs(dir)
@@ -108,6 +106,13 @@ def writereport(dict, dir, title):
 
 writereport(changes, 'htmlchanges', 'Recent Plugin Changes')
 writereport(status,  'htmlstatus', 'All Hudson Plugins')
+
+if len(changes) > 0:
+	print str(len(changes)), 'plugins changed and Jenkins version > Hudson version'
+else:
+	print "No plugins changed - job will fail to prevent email'
+	os.exit(1)
+
 
 						
 						
