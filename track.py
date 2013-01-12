@@ -110,7 +110,7 @@ writereport(status,  'htmlstatus', 'All Hudson Plugins')
 if len(changes) > 0:
 	print str(len(changes)), 'plugins changed and Jenkins version > Hudson version'
 else:
-	print "No plugins changed - job will fail to prevent email'
+	print 'No plugins changed - job will fail to prevent email'
 	os.exit(1)
 
 
