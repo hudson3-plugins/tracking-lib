@@ -46,6 +46,19 @@ scmexceptions = {
 	}
 }
 
+def setscm(key, ex):
+	scmcode = jplugin['scm']
+	s = scms.get(scmcode, None)
+	if s:
+		ex['scm'] = s['scm']
+		ex['clone'] = s['clone'].format(key)
+	else:
+		s = scmexceptions.get(key, None)
+		if s:
+			ex.update(s)
+		else:
+			ex['scm'] = 'Unknown'
+
 extract = {}
 notinhudson = []
 notinjenkins = []
@@ -57,15 +70,7 @@ for key, jplugin in jplugins.items():
 	extract[key] = ex = {}
 	ex['version'] = jversion
 	ex['url'] = jplugin['url']
-	scmcode = jplugin['scm']
-	scm = scms.get(scmcode, None)
-	if not scm:
-		scm = scmexceptions.get(key, None)
-	if scm:
-		ex['scm'] = scm['scm']
-		ex['clone'] = scm['clone']
-	else:
-		ex['scm'] = 'Unknown'
+	setscm(key, ex)
 	ex['diff'] = 'Same'
 	if not hplugin:
 		ex['diff'] = 'Missing'
