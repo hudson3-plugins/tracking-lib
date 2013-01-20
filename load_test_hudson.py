@@ -15,13 +15,6 @@ def cmd(args):
 def cmds(str):
 	cmd(str.split(' '))
 
-def read_plugins(url, who):
-	plugins = read_update_center(url)['plugins']
-	if not plugins:
-		print "Can't read", who, "update center"
-		sys.exit(1)
-	return plugins
-	
 def freshdir(path):
 	if os.path.exists(path):
 		shutil.rmtree(path, True)
