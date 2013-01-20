@@ -20,7 +20,7 @@ def freshdir(path):
 		shutil.rmtree(path, True)
 	cmd(['mkdir', path])
 
-hplugins = read_plugins("http://hudson-ci.org/update-center3/update-center.json", 'hudson')
+hplugins = read_plugins("http://hudson-ci.org/update-center3/update-center.json")
 
 print str(len(hplugins)), 'plugins in hudson3 update center'
 
@@ -28,7 +28,7 @@ print str(len(hplugins)), 'plugins in hudson3 update center'
 #	urllib.urlretrieve("http://www.eclipse.org/downloads/download.php?file=/hudson/war/hudson-3.0.0.war",
 #						"hudson.war")
 
-#freshdir('plugins')
+freshdir('plugins')
 
 rename = re.compile('/([-_a-zA-Z0-9]*\.hpi)')
 
@@ -45,7 +45,7 @@ for key, value in hplugins.items():
 	if not match:
 		print "Can't find name in ", pluginurl
 		continue
-	#urllib.urlretrieve(url, 'plugins/'+match.group(1))
+	urllib.urlretrieve(url, 'plugins/'+match.group(1))
 	deps = value['dependencies']
 	depends = set()
 	for dep in deps:
@@ -53,7 +53,7 @@ for key, value in hplugins.items():
 		# null in json file seems to be translated to 'null'
 		if depname and not depname == 'null':
 			depends.add(depname)
-	work[key] = {'hpiname': match.group(1), 'depends': depends}
+	work[key] = {'hpiname': match.group(1), 'depends': depends, 'version': value['version']}
 
 #
 # Collect recursive dependencies for all plugins
@@ -118,8 +118,8 @@ def loadtest(plugin):
 		match = re.match(refailed, line)
 		if match:
 			plug = match.group(1)
-			failed[plug] = {'log': lines, 'depends': deps}
-			print 'FAILED: '+plug
+			failed[plug] = {'log': lines, 'depends': deps, 'version': value['version']}
+			print 'FAILED:', plug, value['version']
 
 num = 0
 for key, value in hplugins.items():
