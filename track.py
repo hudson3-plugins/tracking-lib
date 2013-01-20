@@ -29,6 +29,14 @@ if not status:
 changes = {}
 defaulthplugin = {}
 defaultjplugin = {}
+missing = 0
+older = 0
+uptodate = 0
+forked = 0
+forkedolder = 0
+forkeduptodate = 0
+forkedpattern = re.compile(r"-h-[0-9]")
+original = 0
 
 for key, jplugin in jplugins.items():
 	jversion = jplugin['version']
@@ -44,9 +52,31 @@ for key, jplugin in jplugins.items():
 	status[key] = stat = {}
 	stat['jversion'] = jversion
 	if hplugin:
-		stat['hversion'] = hplugin['version']
+		hversion = hplugin['version']
+		stat['hversion'] = hversion
+		old = cmpversion(hversion, jversion) < 0
+		fork = re.search(forkedpattern, hversion)
+		if old:
+			older += 1
+			if fork:
+				forked += 1
+				forkedolder += 1
+		else:
+			uptodate += 1
+			if fork:
+				forked += 1
+				forkeduptodate += 1
 	else:
 		stat['hversion'] = 'None'
+		missing += 1
+
+print "Of", str(len(jplugins)), "Jenkins plugins"
+print str(older), "older in Hudson"
+print str(uptodate), "up to date in Hudson"
+print str(missing), "not in Hudson"
+print str(forked), "forked in Hudson"
+print str(forkedolder), "forked older in Hudson"
+print str(forkeduptodate), "forked up to date in Hudson"
 
 for key, hplugin in hplugins.items():
 	if not jplugins.get(key, None):
@@ -54,6 +84,11 @@ for key, hplugin in hplugins.items():
 		status[key] = stat = {}
 		stat['hversion'] = hplugin['version']
 		stat['jversion'] = 'None'
+		original += 1
+
+print "Of", str(len(hplugins)), "Hudson 3 plugins"
+print str(original), "not in Jenkins"
+print str(len(hplugins)-original), "in Jenkins"
 
 dumpAsJson('changes.json', changes)
 dumpAsJson('status.json', status)
@@ -69,7 +104,7 @@ def writereport(dict, dir, title):
 	print >>f, '<title>'+title+'</title>'
 	# print >>f, '<link rel="stylesheet" type="text/css" href="newspaper.css">'
 	print >>f, '<style type="text/css">'
-	css = open('tracking/newspaper.css')
+	css = open('newspaper.css')
 	for line in css:
 		print >>f, line.rstrip()
 	css.close()

@@ -18,3 +18,13 @@ def read_update_center(url):
 		return json.loads(js)
 	else:
 		return {'plugins': None}
+
+def read_plugins(url):
+	plugins = read_update_center(url)['plugins']
+	if not plugins:
+		print "Can't read update center", url
+		sys.exit(1)
+	return plugins
+
+def read_hudson3_plugins():
+	return read_plugins("http://hudson-ci.org/update-center3/update-center.json")
