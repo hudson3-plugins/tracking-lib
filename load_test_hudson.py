@@ -3,22 +3,10 @@ import subprocess, errno, sys, re, os
 import urllib, shutil
 from json_files import *
 from read_update_center import *
+from utils import *
 
 if len(sys.argv) != 2:
 	print 'Usage: ./load_test_hudson.py HUDSON_WAR_PATH'
-
-def cmd(args):
-	if subprocess.call(args):
-		print 'FAILED: '+' '.join(args)
-		sys.exit(1)
-
-def cmds(str):
-	cmd(str.split(' '))
-
-def freshdir(path):
-	if os.path.exists(path):
-		shutil.rmtree(path, True)
-	cmd(['mkdir', path])
 
 hplugins = read_plugins("http://hudson-ci.org/update-center3/update-center.json")
 
@@ -130,7 +118,43 @@ for key, value in hplugins.items():
 
 dumpAsJson('load_fail.json', failed)
 
+def writereport(dict, dir, title):
+	shutil.rmtree(dir, True)
+	os.makedirs(dir)
+	# job checks out code into tracking folder
+	# shutil.copyfile('tracking/newspaper.css', dir+'/newspaper.css')
+	f = open(dir+'/index.html', 'w')
+	print >>f, '<html>'
+	print >>f, '<head>'
+	print >>f, '<title>'+title+'</title>'
+	# print >>f, '<link rel="stylesheet" type="text/css" href="newspaper.css">'
+	print >>f, '<style type="text/css">'
+	css = open('tracking/newspaper.css')
+	for line in css:
+		print >>f, line.rstrip()
+	css.close()
+	print >>f, '</style>'
+	print >>f, '</head>'
+	print >>f, '<body>'
+	if len(dict) == 0:
+		print >>f, '<h3>No plugins failed to load</h3>'
+	else:
+		print >>f, '<h1>Hudson Plugin Load Failures</h1>'
+		for key in sorted(dict.keys()):
+			info = dict[key]
+			print >>f, '<h3>'+key+':'+info['version']+'</h3>'
+			log = info['log']
+			for line in log:
+				print >>f, '<p>'+line.rstrip()+'</p>'
+	print >>f, '</body>'
+	print >>f, '</html>'
+	f.close()
+
+writereport(failed, 'htmlreport', 'Load Failures')
+
+if len(failed) == 0:
+	print 'No Hudson plugins failed to load - job will fail to prevent email'
+	sys.exit(1)
 print str(len(failed)), "hudson plugins failed to load"
-if len(failed) > 0:
-	print 'See load_fail.json for failure logs'
+print 'See Load Failures report of failure logs'
 
