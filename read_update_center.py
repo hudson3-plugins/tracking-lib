@@ -3,13 +3,25 @@
 
 import urllib, json, sys, os
 
-def read_update_center(url):
-	proxymap = {}
-	proxy = os.environ.get('http_proxy', None)
+def _fix_proxy(protocol):
+	proxy = os.environ.get(protocol+'_proxy', None)
 	if proxy:
 		if not proxy.startswith("http:") and not proxy.startswith("https:"):
-			proxy = "http://"+proxy
-		proxymap['http'] = proxy
+			proxy = protocol+"://"+proxy
+	return proxy
+
+def _add_proxy(protocol, proxymap):
+	proxy = fix_proxy(protocol)
+	if proxy:
+		proxymap[protocol] = proxy
+
+def get_proxy_map():
+	proxymap = {}
+	_add_proxy('http')
+	_add_proxy('https')
+	return proxymap
+
+def read_update_center(url):
 	file = urllib.urlopen(url, None, proxymap)
 	text = file.read()
 	file.close()
