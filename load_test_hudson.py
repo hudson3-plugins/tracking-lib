@@ -4,6 +4,7 @@ import urllib, shutil
 from json_files import *
 from read_update_center import *
 from utils import *
+from urlretrieve import urlretrieve
 
 if len(sys.argv) != 2:
 	print 'Usage: ./load_test_hudson.py HUDSON_WAR_PATH'
@@ -33,7 +34,7 @@ for key, value in hplugins.items():
 	if not match:
 		print "Can't find name in ", pluginurl
 		continue
-	urllib.urlretrieve(url, 'plugins/'+match.group(1))
+	urlretrieve(url, 'plugins/'+match.group(1))
 	deps = value['dependencies']
 	depends = set()
 	for dep in deps:
