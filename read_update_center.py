@@ -22,7 +22,7 @@ def get_proxy_map():
 	return proxymap
 
 def read_update_center(url):
-	file = urllib.urlopen(url, None, proxymap)
+	file = urllib.urlopen(url, None, get_proxy_map())
 	text = file.read()
 	file.close()
 	if text.startswith('updateCenter.post(') and text.endswith(');'):
