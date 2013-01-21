@@ -17,8 +17,8 @@ def _add_proxy(protocol, proxymap):
 
 def get_proxy_map():
 	proxymap = {}
-	_add_proxy('http')
-	_add_proxy('https')
+	_add_proxy('http', proxymap)
+	_add_proxy('https', proxymap)
 	return proxymap
 
 def read_update_center(url):
