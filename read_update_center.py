@@ -11,7 +11,7 @@ def _fix_proxy(protocol):
 	return proxy
 
 def _add_proxy(protocol, proxymap):
-	proxy = fix_proxy(protocol)
+	proxy = _fix_proxy(protocol)
 	if proxy:
 		proxymap[protocol] = proxy
 
