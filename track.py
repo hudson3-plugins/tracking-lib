@@ -104,7 +104,7 @@ def writereport(dict, dir, title):
 	print >>f, '<title>'+title+'</title>'
 	# print >>f, '<link rel="stylesheet" type="text/css" href="newspaper.css">'
 	print >>f, '<style type="text/css">'
-	css = open('newspaper.css')
+	css = open('tracking/newspaper.css')
 	for line in css:
 		print >>f, line.rstrip()
 	css.close()
