@@ -132,6 +132,8 @@ for key, value in hplugins.items():
 	num += 1
 	if num % 10 == 0:
 		print num, 'tested'
+if num % 10 != 0:
+	print num, 'tested'
 
 dumpAsJson('load_fail.json', failed)
 
