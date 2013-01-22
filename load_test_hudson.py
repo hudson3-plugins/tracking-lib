@@ -138,15 +138,14 @@ dumpAsJson('load_fail.json', failed)
 def writereport(dict, dir, title):
 	shutil.rmtree(dir, True)
 	os.makedirs(dir)
-	# job checks out code into tracking folder
-	# shutil.copyfile('tracking/newspaper.css', dir+'/newspaper.css')
 	f = open(dir+'/index.html', 'w')
 	print >>f, '<html>'
 	print >>f, '<head>'
 	print >>f, '<title>'+title+'</title>'
 	# print >>f, '<link rel="stylesheet" type="text/css" href="newspaper.css">'
 	print >>f, '<style type="text/css">'
-	css = open('tracking/newspaper.css')
+	# job checks out code into loadtest folder
+	css = open('loadtest/newspaper.css')
 	for line in css:
 		print >>f, line.rstrip()
 	css.close()
@@ -159,10 +158,10 @@ def writereport(dict, dir, title):
 		print >>f, '<h1>Hudson Plugin Load Failures</h1>'
 		for key in sorted(dict.keys()):
 			info = dict[key]
-			print >>f, '<h3>'+key+':'+info['version']+'</h3>'
+			print >>f, '<h3>%s:%s</h3>' % (key, info['version'])
 			log = info['log']
 			for line in log:
-				print >>f, '<p>'+line.rstrip()+'</p>'
+				print >>f, '<p>%s</p>' % line.rstrip()
 	print >>f, '</body>'
 	print >>f, '</html>'
 	f.close()
