@@ -6,12 +6,28 @@ from read_update_center import *
 from utils import *
 from urlretrieve import urlretrieve
 
+#
+# Don't want to hardwire in, e.g., "http://www.eclipse.org/downloads/download.php?file=/hudson/war/hudson-3.0.0.war&r=1"
+#
+
 if len(sys.argv) != 2:
 	print 'Usage: ./load_test_hudson.py HUDSON_WAR_PATH'
+	sys.exit(1)
 
 hplugins = read_plugins("http://hudson-ci.org/update-center3/update-center.json")
 
+# dumpAsJson('update-center.json', hplugins)
+# sys.exit()
+
 print str(len(hplugins)), 'plugins in hudson3 update center'
+
+#
+# Download hudson war
+#
+
+print 'Download hudson war from "%s"' % sys.argv[1]
+
+urlretrieve(sys.argv[1], "./hudson.war")
 
 #if not os.path.exists('hudson.war'):
 #	urllib.urlretrieve("http://www.eclipse.org/downloads/download.php?file=/hudson/war/hudson-3.0.0.war",
@@ -32,7 +48,7 @@ for key, value in hplugins.items():
 	url = value['url']
 	match = re.search(rename, url)
 	if not match:
-		print "Can't find name in ", pluginurl
+		print "Can't find name in %s" % url
 		continue
 	urlretrieve(url, 'plugins/'+match.group(1))
 	deps = value['dependencies']
@@ -72,7 +88,7 @@ for key, value in work.items():
 print "Load plugins in Hudson"
 
 home = {'HUDSON_HOME': './hudson_home'}
-run = ['java', '-jar', sys.argv[1], '--httpPort=18080', '--skipInitSetup']
+run = ['java', '-jar', './hudson.war', '--httpPort=18080', '--skipInitSetup']
 refailed = re.compile(r"SEVERE: Failed Loading plugin ([-_a-zA-Z0-9]*)")
 failed = {}
 
