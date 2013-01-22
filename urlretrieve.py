@@ -17,13 +17,11 @@ def urlretrieve(url, path):
 		output = open(path, 'wb')
 		try:
 			output.write(input.read())
-			return True
 		finally:
 			output.close()
 			input.close()
-	except:
-		print 'urlretrieve("'+url+'", "'+path+'" FAILED'
-		return False
+	except Exception, ex:
+		raise Exception('urlretrieve("%s", "%s") FAILED with %s'%(url, path, ex))
 
 if __name__ == "__main__":
 	if len(sys.argv) != 3:
