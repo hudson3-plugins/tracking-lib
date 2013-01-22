@@ -2,6 +2,7 @@
 #
 
 import urllib, json, sys, os
+from json_files import dumpAsJson
 
 def _fix_proxy(protocol):
 	proxy = os.environ.get(protocol+'_proxy', None)
@@ -38,5 +39,24 @@ def read_plugins(url):
 		sys.exit(1)
 	return plugins
 
+def read_hudson3_update_center():
+	return read_update_center("http://hudson-ci.org/update-center3/update-center.json")
+
 def read_hudson3_plugins():
 	return read_plugins("http://hudson-ci.org/update-center3/update-center.json")
+
+def write_update_center(path, data):
+	f = open(path, 'w')
+	f.write('updateCenter.post(%s);' % json.dumps)
+	f.close()
+
+if __name__ == '__main__':
+	nargs = len(sys.argv)
+	if nargs < 2 or nargs > 3:
+		print 'Usage: ./read_update_center TO_PATH [URL]'
+		sys.exit(1)
+	url = "http://hudson-ci.org/update-center3/update-center.json"
+	if nargs == 3:
+		url = sys.argv[2]
+	uc = read_update_center(url)
+	dumpAsJson(sys.argv[1], uc)

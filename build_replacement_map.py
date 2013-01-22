@@ -83,7 +83,26 @@ org.jenkins-ci.lib:dry-run-lib:jar:0.1 =>
 org.jenkins-ci.lib:xtrigger-lib:jar:0.18 =>
 """
 
-def build_replacement_map(path):
+_manual = 0
+_added  = 0
+_central = 0
+_hard = True
+
+def _set_hard(hard):
+	global _hard
+	_hard = hard
+
+def _error(msg):
+	global _hard
+	print 'get_replacement_map: %' % msg
+	if _hard:
+		sys.exit(1)
+
+def get_replacement_map():
+	global _manual
+	global _added
+	global _central
+	
 	clearrepl()
 	addr('org.hudsonci.plugins:token-macro:jar:1.6-h-1')
 	addr('org.jvnet.maven-jellydoc-plugin:maven-jellydoc-plugin:jar:1.3.1')
@@ -107,14 +126,18 @@ def build_replacement_map(path):
 	addr('org.eclipse.hudson:hudson-core:3.0.0-RC4', 'jenkins-core')
 	addr('org.powermock:powermock-module-junit4:1.5')
 	
+	_manual = len(_repl)
+	
 	# now go through hudson3-updates plugins, download hpi, read MANIFEST_MF
 	# and extract groupId, artifactId, and version
 
 	partifact = re.compile(r"Short-Name: ([-_.a-zA-Z0-9]*)")
 	pgroup = re.compile(r"Group-Id: ([-_.a-zA-Z0-9]*)")
 	pversion = re.compile(r"Plugin-Version: ([-_.a-zA-Z0-9]*)")
+	pgroupid = re.compile(r"META-INF/maven/([^/]*)/")
 
 	hudsonplugins = read_hudson3_plugins()
+	_central = len(hudsonplugins)
 	for key, value in hudsonplugins.items():
 		hpiurl = value.get('url', None)
 		if hpiurl:
@@ -126,28 +149,47 @@ def build_replacement_map(path):
 			try:
 				zip = zipfile.ZipFile(filename, 'r')
 			except:
-				print 'Bad zip file for '+key+' at '+hpiurl
+				error('Bad zip file for %s at %s' % (key, hpiurl))
 			if zip:
 				mf = zip.open('META-INF/MANIFEST.MF')
 				for line in mf:
 					match = re.match(partifact, line)
 					if match:
-						artifact = match.groups()[0]
+						artifact = match.group(1)
 					match = re.match(pgroup, line)
 					if match:
-						group = match.groups()[0]
+						group = match.group(1)
 					match = re.match(pversion, line)
 					if match:
-						version = match.groups()[0]
+						version = match.group(1)
 				zip.close()
+				if len(artifact) > 0 and len(group) == 0 and len(version) > 0:
+					for line in zip.namelist():
+						match = re.match(pgroupid, line)
+						if match:
+							group = match.group(1)
+							break
+					if len(group) == 0:
+						error("%s no groupId found" % key)
 				if len(artifact) > 0 and len(group) > 0 and len(version) > 0:
 					addrepl(group, artifact, version)
+					_added += 1
+				else:
+					error('For %s artifactId="%s", groupId="%s", version="%s"' % (key, artifact, group, version))
+			else:
+				error('zipfile.Zipfile("%s", 'r') FAILED for %s' % (filename, key))
 			os.remove(filename)
+	return _repl
 
-	# Save to replacements.json
-
-	dumpAsJson(path, _repl)
+def build_replacement_map(path):
+	dumpAsJson(path, get_replacement_map())
 
 if __name__ == '__main__':
+	_set_hard(False)
 	build_replacement_map('./replacements.json')
+	print "%d plugins in hudson3 plugin central" % _central
+	print "%d manual additions to map" % _manual
+	print "%d added from plugin central" % _added
+	print "%d total in map" % len(_repl)
+	
 
