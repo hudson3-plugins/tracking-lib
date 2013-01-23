@@ -47,7 +47,7 @@ def read_hudson3_plugins():
 
 def write_update_center(path, data):
 	f = open(path, 'w')
-	f.write('updateCenter.post(%s);' % json.dumps)
+	f.write('updateCenter.post(%s);' % json.dumps(data))
 	f.close()
 
 if __name__ == '__main__':

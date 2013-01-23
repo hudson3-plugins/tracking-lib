@@ -139,6 +139,8 @@ def get_replacement_map():
 	hudsonplugins = read_hudson3_plugins()
 	_central = len(hudsonplugins)
 	for key, value in hudsonplugins.items():
+		if key == 'BuildPipelinePlugin':
+			print '**BuildPipelinePlugin'
 		hpiurl = value.get('url', None)
 		if hpiurl:
 			filename, headers = urllib.urlretrieve(hpiurl)
@@ -172,13 +174,19 @@ def get_replacement_map():
 					if len(group) == 0:
 						error("%s no groupId found" % key)
 				if len(artifact) > 0 and len(group) > 0 and len(version) > 0:
+					if key == 'BuildPipelinePlugin':
+						print '** %s:%s:%s for %s' % (group, artifact, version, key)
 					addrepl(group, artifact, version)
+					if key != artifact:
+						addrepl(group, artifact, version, key)
 					_added += 1
 				else:
 					error('For %s artifactId="%s", groupId="%s", version="%s"' % (key, artifact, group, version))
 			else:
 				error('zipfile.Zipfile("%s", 'r') FAILED for %s' % (filename, key))
 			os.remove(filename)
+		else:
+			error('No hpi url for %s' % key)
 	return _repl
 
 def build_replacement_map(path):
