@@ -126,6 +126,11 @@ def get_replacement_map():
 	addr('org.eclipse.hudson:hudson-core:3.0.0-RC4', 'jenkins-core')
 	addr('org.powermock:powermock-module-junit4:1.5')
 	
+	# plugin parents
+	addr('org.hudsonci.plugins:analysis-pom:3.0.0-RC2')
+	addr('org.eclipse.hudson.plugins:hudson-plugin-parent:3.0.0')
+	addr('org.eclipse.hudson.plugins:hudson-plugin-parent:3.0.0', 'plugin')
+	
 	_manual = len(_repl)
 	
 	# now go through hudson3-updates plugins, download hpi, read MANIFEST_MF
@@ -139,8 +144,10 @@ def get_replacement_map():
 	hudsonplugins = read_hudson3_plugins()
 	_central = len(hudsonplugins)
 	for key, value in hudsonplugins.items():
-		if key == 'BuildPipelinePlugin':
-			print '**BuildPipelinePlugin'
+		addrepl(value['groupId'], value['name'], value['version'])
+	return _repl
+			
+"""		Don't need to read hpi files any more
 		hpiurl = value.get('url', None)
 		if hpiurl:
 			filename, headers = urllib.urlretrieve(hpiurl)
@@ -174,8 +181,6 @@ def get_replacement_map():
 					if len(group) == 0:
 						error("%s no groupId found" % key)
 				if len(artifact) > 0 and len(group) > 0 and len(version) > 0:
-					if key == 'BuildPipelinePlugin':
-						print '** %s:%s:%s for %s' % (group, artifact, version, key)
 					addrepl(group, artifact, version)
 					if key != artifact:
 						addrepl(group, artifact, version, key)
@@ -188,6 +193,7 @@ def get_replacement_map():
 		else:
 			error('No hpi url for %s' % key)
 	return _repl
+"""
 
 def build_replacement_map(path):
 	dumpAsJson(path, get_replacement_map())
@@ -195,9 +201,8 @@ def build_replacement_map(path):
 if __name__ == '__main__':
 	_set_hard(False)
 	build_replacement_map('./replacements.json')
-	print "%d plugins in hudson3 plugin central" % _central
 	print "%d manual additions to map" % _manual
-	print "%d added from plugin central" % _added
+	print "%d added from plugin central" % _central
 	print "%d total in map" % len(_repl)
 	
 

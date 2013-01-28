@@ -37,7 +37,7 @@ _data = {
   	"detect": None,
   	"replace": [
   		(r"org\.acegissecurity", r"org\.springframework\.security")
-  	},
+  	],
   	"sourceChange": True
   },
   "groovy": {
@@ -48,16 +48,16 @@ _data = {
   	},
   	"files": ["*.java"],
   	"detect": ["org\.codehaus\.groovy\."],
-  	"replace:" None,
+  	"replace": None,
   	"sourceChange": False
   },
   "Jenkins": {
   	"dependency": None,
   	"files": ["*.html", "*.jelly", "*.properties"],
   	"detect": None,
-  	"replace": {
+  	"replace": [
   		(r"Jenkins", r"Hudson")
-  	},
+  	],
   	"sourceChange": False
   }
 }
@@ -75,7 +75,7 @@ def _detect(files, patterns):
 	return False
 
 def _replace(files, pairs):
-	patterns = pairs[:,0]
+	patterns = [x[0] for x in pairs]
 	for file in files:
 		matched = set()
 		for pattern in patterns:
@@ -91,7 +91,7 @@ def _replace(files, pairs):
 			return True
 	return False
 
-def _addresult(result, value):
+def _addresult(result, key, value):
 	result[key] = r = {}
 	r['dependency'] = value['dependency']
 	r['sourceChange'] = value['sourceChange']
@@ -101,11 +101,11 @@ def fixsource():
 	for key, value in _data.items():
 		patterns = value['detect']
 		if patterns and _detect(value['files'], patterns):
-			_addresult(result, value)
+			_addresult(result, key, value)
 			break
 		pairs = value['replace']
 		if pairs and _replace(value['files'], pairs):
-			_addresult(result, value)
+			_addresult(result, key, value)
 			break
 	return result
 

@@ -52,11 +52,20 @@ def fixpom(dir):
 		build_replacement_map(path)
 	replmap = loadFromJson(path)
 	
+	requireFork = False
+	
 	ns = 'http://maven.apache.org/POM/4.0.0'
 	nsc = '{'+ns+'}'
-	doc = ET.parse(dir+"/pom.xml")
-	doc.write(dir+'/pom.xml.bak', encoding='UTF-8', default_namespace=ns)
+	bakpath = dir+'/pom.xml.bak'
+	pompath = dir+"/pom.xml"
+	if os.path.exists(bakpath):
+		os.remove(bakpath)
+	doc = ET.parse(pompath)
+	doc.write(bakpath, encoding='UTF-8', default_namespace=ns)
 	root = doc.getroot()
+
+	#-----------------------------------------------------------
+	# Error check plugin and parent
 
 	parent = root.find(nsc+'parent')
 	if parent is None:
@@ -70,7 +79,22 @@ def fixpom(dir):
 	if name is None:
 		name = ET.SubElement(root, nsc+'name')
 		name.text = artifact.text
-
+	parentgroup = _findOrCreate(parent, nsc+'groupId')
+	if parentgroup.text is None or parentgroup.text == '':
+		sys.stderr.write('Plugin has no <parent><groupId>')
+		return 'No parent groupId'
+	parentversion = _findOrCreate(parent, nsc+'version')
+	if parentversion.text is None or parentversion.text == '':
+		sys.stderr.write('Plugin has no <parent><version>')
+		return 'No parent version'
+	parentartifact = _findOrCreate(parent, nsc+'artifactId')
+	if parentartifact.text is None or parentartifact.text == '':
+		sys.stderr.write('Plugin has no <parent><artifactId>')
+		return 'No parent artifactId'
+	
+	#-----------------------------------------------------------
+	# Fix parent
+	
 	"""
     	<parent>
         	<groupId>org.eclipse.hudson.plugins</groupId>
@@ -78,19 +102,25 @@ def fixpom(dir):
         	<version>3.0.0</version>
     	</parent>
 	"""
-	group = _findOrCreate(parent, nsc+'groupId')
-	if group.text == None:
-		sys.stderr.write('Plugin has no <parent><groupId>')
-		return 'No parent groupId'
-	match = re.search(r"jenkins|org\.jvnet\.hudson", group.text)
-	if not match:
-		sys.stderr.write("<parent><groupId>"+group.text+" unexpected value")
-		return 'Parent groupId '+group.text
-	group.text = 'org.eclipse.hudson.plugins'
-	parentArtifact = _findOrCreate(parent, nsc+'artifactId')
-	parentArtifact.text = 'hudson-plugin-parent'
-	version = _findOrCreate(parent, nsc+'version')
-	version.text = '3.0.0'
+	# relativePath is often wrong - disable it
+	relativePath = _findOrCreate(parent, nsc+'relativePath')
+	relativePath.text = ''
+	
+	repl = replmap.get(parentartifact.text, None)
+	if repl:
+		parentartifact.text = repl['artifactId']
+		parentgroup.text = repl['groupId']
+		parentversion.text = repl['version']
+		requireFork = True
+	else:
+		# Assume some kind of plugin parent
+		match = re.search(r"jenkins|org\.jvnet\.hudson", parentgroup.text)
+		if not match:
+			sys.stderr.write("<parent><groupId>"+parentgroup.text+" unexpected value")
+			return 'Parent groupId '+parentgroup.text
+		parentgroup.text = 'org.eclipse.hudson.plugins'
+		parentartifact.text = 'hudson-plugin-parent'
+		parentversion.text = '3.0.0'
 
 	#-----------------------------------------------------------
 	# jenkins plugins frequently have no groupId
@@ -242,13 +272,13 @@ def fixpom(dir):
 			artifactId = departifact.text
 			depgroup = dep.find(nsc+'groupId')
 			repl = replmap.get(artifactId, None)
-			if repl:
+			if repl is not None:
 				departifact.text = repl['artifactId']
 				depgroup = _findOrCreate(dep, nsc+'groupId')
 				depgroup.text = repl['groupId']
 				depversion = _findOrCreate(dep, nsc+'version')
 				depversion.text = repl['version']
-			if depgroup:
+			if depgroup is not None:
 				depgroups.append(depgroup.text)
 	
 	#-----------------------------------------------------------
@@ -260,7 +290,7 @@ def fixpom(dir):
 	if deps is not None:
 		for dep in deps.findall(nsc+'dependency'):
 			depversion = dep.find(nsc+'version')
-			if depversion and ('-h-' in depversion or '-hudson-' in depversion):
+			if depversion is not None and ('-h-' in depversion or '-hudson-' in depversion):
 				requireFork = True
 				break
 
@@ -274,7 +304,7 @@ def fixpom(dir):
 			for r in repo.findall(nsc+'repository'):
 				id = r.find(nsc+'id')
 				if id is not None and 'jenkins' in id.text:
-					r.remove()
+					repo.remove(r)
 
 		pluginRepo = root.find(nsc+'pluginRepositories')
 		if pluginRepo is not None:
@@ -286,7 +316,7 @@ def fixpom(dir):
 	
 	fixes = fixsource()
 	for key, value in fixes.items():
-		if value['sourceChanged']:
+		if value['sourceChange']:
 			requireFork = True
 		dependency = value['dependency']
 		if dependency:
@@ -304,7 +334,7 @@ def fixpom(dir):
 
 	_indent(root)
 
-	doc.write(dir+'/pom.xml', encoding='UTF-8', default_namespace=ns)
+	doc.write(pompath, encoding='UTF-8', default_namespace=ns)
 	
 	if requireFork:
 		return 'Forked'
@@ -318,7 +348,7 @@ if __name__ == '__main__':
 	dir = '.'
 	if len(sys.argv) == 2:
 		dir = sys.argv[1]
-	fixpom(dir)
+	print fixpom(dir)
 
 
 
