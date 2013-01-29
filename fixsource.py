@@ -79,13 +79,13 @@ def _replace(files, pairs):
 	for file in files:
 		matched = set()
 		for pattern in patterns:
-			sub = subprocess.Popen([grepscript, files, pattern], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
+			sub = subprocess.Popen([_grepscript, file, pattern], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
 			if sub.wait() == 0:
 				matched.add(pattern)
 		if len(matched) > 0:
 			for pair in pairs:
 				if pair[0] in matched:
-					sub = subprocess.Popen([replacescript, files, pair[0], pair[1]], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
+					sub = subprocess.Popen([_replacescript, file, pair[0], pair[1]], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
 					if sub.wait() != 0:
 						print 'Failed to replace "%s" with "%s"'%(pair[0], pair[1])
 			return True
@@ -102,11 +102,9 @@ def fixsource():
 		patterns = value['detect']
 		if patterns and _detect(value['files'], patterns):
 			_addresult(result, key, value)
-			break
 		pairs = value['replace']
 		if pairs and _replace(value['files'], pairs):
 			_addresult(result, key, value)
-			break
 	return result
 
 if __name__ == '__main__':

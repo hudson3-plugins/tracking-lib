@@ -40,6 +40,40 @@ def _indent(elem, level=0):
 		if level and (not elem.tail or not elem.tail.strip()):
 			elem.tail = i
 
+def _replace_plugin(parent, artifactId):
+	global _replmap
+	global _nsc
+	repl = _replmap.get(artifactId, None)
+	if repl is not None:
+		artifact = _findOrCreate(parent, _nsc+'artifactId')
+		artifact.text = repl['artifactId']
+		group = _findOrCreate(parent, _nsc+'groupId')
+		group.text = repl['groupId']
+		versionRange = parent.find(_nsc+'versionRange')
+		if versionRange is not None:
+			versionRange.text = '['+repl['version']+',)'
+		else:
+			version = _findOrCreate(parent, _nsc+'version')
+			version.text = repl['version']
+		return True
+	return False
+
+def _get_parent(child, ancestor):
+	for c in ancestor.getchildren():
+		if c == child:
+			return ancestor
+		parent = _get_parent(child, c)
+		if parent is not None:
+			return parent
+	return None
+
+def _fix_artifacts(element):
+	global _nsc
+	for art in element.findall('.//'+_nsc+'artifactId'):
+		artifactId = art.text
+		parent = _get_parent(art, element)
+		_replace_plugin(parent, artifactId) 
+
 #
 # fixpom function
 #
@@ -50,12 +84,14 @@ def fixpom(dir):
 	path = os.path.join(os.path.dirname(__file__), 'replacements.json')
 	if not os.path.exists(path):
 		build_replacement_map(path)
-	replmap = loadFromJson(path)
+	global _replmap
+	_replmap = loadFromJson(path)
 	
 	requireFork = False
 	
 	ns = 'http://maven.apache.org/POM/4.0.0'
-	nsc = '{'+ns+'}'
+	global _nsc
+	_nsc = '{'+ns+'}'
 	bakpath = dir+'/pom.xml.bak'
 	pompath = dir+"/pom.xml"
 	if os.path.exists(bakpath):
@@ -67,27 +103,27 @@ def fixpom(dir):
 	#-----------------------------------------------------------
 	# Error check plugin and parent
 
-	parent = root.find(nsc+'parent')
+	parent = root.find(_nsc+'parent')
 	if parent is None:
 		sys.stderr.write('pom.xml has no <parent> element\n')
 		return 'No parent'
-	artifact = root.find(nsc+'artifactId')
+	artifact = root.find(_nsc+'artifactId')
 	if artifact is None:
 		sys.stderr.write('pom.xml has no <artifactId> element\n')
 		return 'No artifactId'
-	name = root.find(nsc+'name')
+	name = root.find(_nsc+'name')
 	if name is None:
-		name = ET.SubElement(root, nsc+'name')
+		name = ET.SubElement(root, _nsc+'name')
 		name.text = artifact.text
-	parentgroup = _findOrCreate(parent, nsc+'groupId')
+	parentgroup = _findOrCreate(parent, _nsc+'groupId')
 	if parentgroup.text is None or parentgroup.text == '':
 		sys.stderr.write('Plugin has no <parent><groupId>')
 		return 'No parent groupId'
-	parentversion = _findOrCreate(parent, nsc+'version')
+	parentversion = _findOrCreate(parent, _nsc+'version')
 	if parentversion.text is None or parentversion.text == '':
 		sys.stderr.write('Plugin has no <parent><version>')
 		return 'No parent version'
-	parentartifact = _findOrCreate(parent, nsc+'artifactId')
+	parentartifact = _findOrCreate(parent, _nsc+'artifactId')
 	if parentartifact.text is None or parentartifact.text == '':
 		sys.stderr.write('Plugin has no <parent><artifactId>')
 		return 'No parent artifactId'
@@ -103,10 +139,10 @@ def fixpom(dir):
     	</parent>
 	"""
 	# relativePath is often wrong - disable it
-	relativePath = _findOrCreate(parent, nsc+'relativePath')
+	relativePath = _findOrCreate(parent, _nsc+'relativePath')
 	relativePath.text = ''
 	
-	repl = replmap.get(parentartifact.text, None)
+	repl = _replmap.get(parentartifact.text, None)
 	if repl:
 		parentartifact.text = repl['artifactId']
 		parentgroup.text = repl['groupId']
@@ -126,13 +162,13 @@ def fixpom(dir):
 	# jenkins plugins frequently have no groupId
 	# in any case, change it to org.hudsonci.plugins
 
-	groupId = _findOrCreate(root, nsc+'groupId')
+	groupId = _findOrCreate(root, _nsc+'groupId')
 	groupId.text = 'org.hudsonci.plugins'
 	
 	#-----------------------------------------------------------
 	# fix version for a fork (doesn't mean it has to be)
 	
-	version = root.find(nsc+'version')
+	version = root.find(_nsc+'version')
 	if version is None:
 		return "plugin has no version"
 	match = re.match(r"(.*)(-SNAPSHOT)?", version.text)
@@ -156,13 +192,13 @@ def fixpom(dir):
 	#-----------------------------------------------------------
 	# fix documentation URL
 
-	url = root.find(nsc+'url')
+	url = root.find(_nsc+'url')
 	if url is not None:
 		urltext = url.text.replace('jenkins-ci', 'hudson-ci')
 		urltext = urltext.replace('JENKINS', 'HUDSON')
 		url.text = urltext
 	else:
-		url = ET.SubElement(root, nsc+'url')
+		url = ET.SubElement(root, _nsc+'url')
 		escname = name.text.replace(' ', '+')
 		url.text = 'http://wiki.hudson-ci.org/display/HUDSON/' + escname
 
@@ -176,19 +212,19 @@ def fixpom(dir):
     	<url>https://github.com/hudson3-plugins/console-column-plugin</url>
   	</scm>
 	"""
-	scm = _findOrCreate(root, nsc+'scm')
+	scm = _findOrCreate(root, _nsc+'scm')
 	artifactId = artifact.text
-	connection = _findOrCreate(scm, nsc+'connection')
+	connection = _findOrCreate(scm, _nsc+'connection')
 	connection.text = 'scm:git:git://github.com/hudson3-plugins/' + artifactId + '.git'
-	devConnection = _findOrCreate(scm, nsc+'developerConnection')
+	devConnection = _findOrCreate(scm, _nsc+'developerConnection')
 	devConnection.text = 'scm:git:git@github.com:hudson3-plugins/' + artifactId + '.git'
-	scmUrl = _findOrCreate(scm, nsc+'url')
+	scmUrl = _findOrCreate(scm, _nsc+'url')
 	scmUrl.text = 'https://github.com/hudson3-plugins/' + artifactId
 
 	#-----------------------------------------------------------
 	# get rid of distributionManagement
 
-	distm = root.find(nsc+'distributionManagement')
+	distm = root.find(_nsc+'distributionManagement')
 	if distm is not None:
 		root.remove(distm)
 
@@ -204,15 +240,15 @@ def fixpom(dir):
     	</license>
   	</licenses>
 	"""
-	licenses = root.find(nsc+'licenses')
+	licenses = root.find(_nsc+'licenses')
 	if licenses is None:
-		licenses = _addChild(root, nsc+'licenses')
-		license = _addChild(licenses, nsc+'license')
-		licenseName = _addChild(license, nsc+'name')
+		licenses = _addChild(root, _nsc+'licenses')
+		license = _addChild(licenses, _nsc+'license')
+		licenseName = _addChild(license, _nsc+'name')
 		licenseName.text = 'The MIT license'
-		licenseUrl = _addChild(license, nsc+'url')
+		licenseUrl = _addChild(license, _nsc+'url')
 		licenseUrl.text = 'http://opensource.org/licenses/MIT'
-		licenseDistro = _addChild(license, nsc+'distribution')
+		licenseDistro = _addChild(license, _nsc+'distribution')
 		licenseDistro.text = 'repo'
 
 	#-----------------------------------------------------------
@@ -228,85 +264,84 @@ def fixpom(dir):
     	</developer>
   	</developers>
 	"""
-	developers = root.find(nsc+'developers')
+	developers = root.find(_nsc+'developers')
 	if developers is None:
-		developers = _addChild(root, nsc+'developers')
-		developer = _addChild(developers, nsc+'developer')
-		devId = _addChild(developer, nsc+'id')
+		developers = _addChild(root, _nsc+'developers')
+		developer = _addChild(developers, _nsc+'developer')
+		devId = _addChild(developer, _nsc+'id')
 		devId.text = 'bobfoster'
-		devName = _addChild(developer, nsc+'name')
+		devName = _addChild(developer, _nsc+'name')
 		devName.text = 'Bob Foster'
-		devEmail = _addChild(developer, nsc+'email')
+		devEmail = _addChild(developer, _nsc+'email')
 		devEmail.text = 'bobfoster@gmail.com'
-		devRoles = _addChild(developer, nsc+'roles')
-		devRole = _addChild(devRoles, nsc+'role')
+		devRoles = _addChild(developer, _nsc+'roles')
+		devRole = _addChild(devRoles, _nsc+'role')
 		devRole.text = 'Hudson Maintainer'
 
 	#-----------------------------------------------------------
 	# if no properties, or no hudsonTags property, add a single tag
 	# this will probably need to be manually corrected
 
-	props = _findOrCreate(root, nsc+'properties')
-	hudsonTags = props.find(nsc+'hudsonTags')
+	props = _findOrCreate(root, _nsc+'properties')
+	hudsonTags = props.find(_nsc+'hudsonTags')
 	if hudsonTags is None:
-		hudsonTags = _addChild(props, nsc+'hudsonTags')
+		hudsonTags = _addChild(props, _nsc+'hudsonTags')
 		hudsonTags.text = 'misc'
 
 	#-----------------------------------------------------------
 	# Sonatype requires <description>
 	# If none, make it same as name
 
-	description = root.find(nsc+'description')
+	description = root.find(_nsc+'description')
 	if description is None:
-		description = _addChild(root, nsc+'description')
+		description = _addChild(root, _nsc+'description')
 		description.text = name.text
 
 	#-----------------------------------------------------------
 	# Go through dependencies, replacing with Hudson equivalents
-	
-	depgroups = []
-	deps = root.find(nsc+'dependencies')
-	if deps is not None:
-		for dep in deps.findall(nsc+'dependency'):
-			departifact = dep.find(nsc+'artifactId')
-			artifactId = departifact.text
-			depgroup = dep.find(nsc+'groupId')
-			repl = replmap.get(artifactId, None)
-			if repl is not None:
-				departifact.text = repl['artifactId']
-				depgroup = _findOrCreate(dep, nsc+'groupId')
-				depgroup.text = repl['groupId']
-				depversion = _findOrCreate(dep, nsc+'version')
-				depversion.text = repl['version']
-			if depgroup is not None:
-				depgroups.append(depgroup.text)
-	
-	#-----------------------------------------------------------
+	#
 	# Prior to dependency replacement, we haven't done anything
 	# that would require a fork. However, if a plugin has been
 	# forked, the original won't work in Hudson.
-	
-	requireFork = False
-	if deps is not None:
-		for dep in deps.findall(nsc+'dependency'):
-			depversion = dep.find(nsc+'version')
-			if depversion is not None and ('-h-' in depversion or '-hudson-' in depversion):
-				requireFork = True
-				break
 
+	requireFork = False
+	depgroups = []
+	deps = root.find(_nsc+'dependencies')
+	for art in deps.findall('.//'+_nsc+'artifactId'):
+		artifactId = art.text
+		dep = _get_parent(art, deps)
+		if _replace_plugin(dep, artifactId):
+			depgroup = dep.find(_nsc+'groupId')
+			if depgroup is not None:
+				depgroups.append(depgroup.text)
+			#------------------------------------------------------
+			# If a dependency is a fork, this plugin must be forked
+			#
+			depversion = dep.find(_nsc+'version')
+			if depversion is not None:
+				version = depversion.text
+				requireFork = requireFork or '-h-' in version or '-hudson-' in version
+	
+	#-----------------------------------------------------------
+	# Do the same with plugins, replacing with Hudson equivalents
+	#
+	build = root.find(_nsc+'build')
+	if build is not None:
+		_fix_artifacts(build)
+	
 	#-----------------------------------------------------------
 	# After this, some Jenkins plugins may remain.
 	# If not, remove jenkins repository.
 
 	if len([x for x in depgroups if 'jenkins' in x]) == 0:
-		repo = root.find(nsc+'repositories')
+		repo = root.find(_nsc+'repositories')
 		if repo is not None:
-			for r in repo.findall(nsc+'repository'):
-				id = r.find(nsc+'id')
+			for r in repo.findall(_nsc+'repository'):
+				id = r.find(_nsc+'id')
 				if id is not None and 'jenkins' in id.text:
 					repo.remove(r)
 
-		pluginRepo = root.find(nsc+'pluginRepositories')
+		pluginRepo = root.find(_nsc+'pluginRepositories')
 		if pluginRepo is not None:
 			root.remove(pluginRepo)
 	
@@ -322,11 +357,11 @@ def fixpom(dir):
 		if dependency:
 			requireFork = True
 			if deps is None:
-				deps = _addChild(root, nsc+'dependencies')
-			dep = _addChild(deps, nsc+'dependency')
-			_addChild(dep, nsc+'groupId').text = dependency['groupId']
-			_addChild(dep, nsc+'artifactId').text = dependency['artifactId']
-			_addChild(dep, nsc+'version').text = dependency['version']
+				deps = _addChild(root, _nsc+'dependencies')
+			dep = _addChild(deps, _nsc+'dependency')
+			_addChild(dep, _nsc+'groupId').text = dependency['groupId']
+			_addChild(dep, _nsc+'artifactId').text = dependency['artifactId']
+			_addChild(dep, _nsc+'version').text = dependency['version']
 
 	#-----------------------------------------------------------
 	# todo move groupId to before artifactId
