@@ -87,10 +87,15 @@ _manual = 0
 _added  = 0
 _central = 0
 _hard = True
+_slow = False
 
-def _set_hard(hard):
+def _set_hard(torf):
 	global _hard
-	_hard = hard
+	_hard = torf
+
+def _set_slow(torf):
+	global _slow
+	_slow = torf
 
 def _error(msg):
 	global _hard
@@ -98,42 +103,16 @@ def _error(msg):
 	if _hard:
 		sys.exit(1)
 
-def get_replacement_map():
-	global _manual
+def _fill_replacement_map(hudsonplugins):
 	global _added
-	global _central
+	for key, value in hudsonplugins.items():
+		addrepl(value['groupId'], value['name'], value['version'])
+		added += 1
+
+def _fill_replacement_map_slow(hudsonplugins):
+	global _added
 	
-	clearrepl()
-	addr('org.hudsonci.plugins:token-macro:jar:1.6-h-1')
-	addr('org.jvnet.maven-jellydoc-plugin:maven-jellydoc-plugin:jar:1.3.1')
-	addr('org.eclipse.hudson.tools:maven-hpi-plugin:3.0.0')
-	addr('org.hudsonci.plugins:analysis-core:1.47-h-1')
-	addr('org.eclipse.hudson.tools:maven-hpi-plugin:3.0.0')
-	addr('org.hudsonci.tools:htmlunit:2.6-hudson-3')
-	addr('org.hudsonci.plugins:git:2.2.1-h-1')
-	addr('org.eclipse.hudson.tools:maven-hpi-plugin:3.0.0')
-	addr('org.hudsonci.plugins:instant-messaging:1.22-h-1')
-	addr('org.kohsuke.stapler:json-lib:jar:2.1-rev6')
-	addr('org.eclipse.hudson:hudson-war:3.0.0-RC4', 'jenkins-war')
-	addr('org.jvnet.hudson:sshd:1.0-pre-hudson-1')
-	addr('org.eclipse.hudson.stapler:stapler-parent:3.0.0', 'stapler')
-	addr('org.jvnet.hudson.main:ui-samples-plugin:1.395')
-	addr('org.powermock:powermock-api-mockito:1.5')
-	addr('org.hudsonci.plugins:analysis-test:1.9-h-1')
-	addr('org.kohsuke:github-api:1.33')
-	addr('com.google.inject:guice:3.0')
-	addr('org.eclipse.hudson:hudson-test-framework:3.0.0-RC4', 'jenkins-test-harness')
-	addr('org.eclipse.hudson:hudson-core:3.0.0-RC4', 'jenkins-core')
-	addr('org.powermock:powermock-module-junit4:1.5')
-	
-	# plugin parents
-	addr('org.hudsonci.plugins:analysis-pom:3.0.0-RC2')
-	addr('org.eclipse.hudson.plugins:hudson-plugin-parent:3.0.0')
-	addr('org.eclipse.hudson.plugins:hudson-plugin-parent:3.0.0', 'plugin')
-	
-	_manual = len(_repl)
-	
-	# now go through hudson3-updates plugins, download hpi, read MANIFEST_MF
+	# go through hudson3-updates plugins, download hpi, read MANIFEST_MF
 	# and extract groupId, artifactId, and version
 
 	partifact = re.compile(r"Short-Name: ([-_.a-zA-Z0-9]*)")
@@ -141,13 +120,7 @@ def get_replacement_map():
 	pversion = re.compile(r"Plugin-Version: ([-_.a-zA-Z0-9]*)")
 	pgroupid = re.compile(r"META-INF/maven/([^/]*)/")
 
-	hudsonplugins = read_hudson3_plugins()
-	_central = len(hudsonplugins)
 	for key, value in hudsonplugins.items():
-		addrepl(value['groupId'], value['name'], value['version'])
-	return _repl
-			
-"""		Don't need to read hpi files any more
 		hpiurl = value.get('url', None)
 		if hpiurl:
 			filename, headers = urllib.urlretrieve(hpiurl)
@@ -192,14 +165,62 @@ def get_replacement_map():
 			os.remove(filename)
 		else:
 			error('No hpi url for %s' % key)
+
+def get_replacement_map_slow():
+	_set_slow(True)
+	return get_replacement_map()
+
+def get_replacement_map():
+	global _manual
+	global _added
+	global _central
+	global _slow
+	
+	clearrepl()
+	addr('org.hudsonci.plugins:token-macro:jar:1.6-h-1')
+	addr('org.jvnet.maven-jellydoc-plugin:maven-jellydoc-plugin:jar:1.3.1')
+	addr('org.eclipse.hudson.tools:maven-hpi-plugin:3.0.0')
+	addr('org.hudsonci.plugins:analysis-core:1.47-h-1')
+	addr('org.eclipse.hudson.tools:maven-hpi-plugin:3.0.0')
+	addr('org.hudsonci.tools:htmlunit:2.6-hudson-3')
+	addr('org.hudsonci.plugins:git:2.2.1-h-1')
+	addr('org.eclipse.hudson.tools:maven-hpi-plugin:3.0.0')
+	addr('org.hudsonci.plugins:instant-messaging:1.22-h-1')
+	addr('org.kohsuke.stapler:json-lib:jar:2.1-rev6')
+	addr('org.eclipse.hudson:hudson-war:3.0.0-RC4', 'jenkins-war')
+	addr('org.jvnet.hudson:sshd:1.0-pre-hudson-1')
+	addr('org.eclipse.hudson.stapler:stapler-parent:3.0.0', 'stapler')
+	addr('org.jvnet.hudson.main:ui-samples-plugin:1.395')
+	addr('org.powermock:powermock-api-mockito:1.5')
+	addr('org.hudsonci.plugins:analysis-test:1.9-h-1')
+	addr('org.kohsuke:github-api:1.33')
+	addr('com.google.inject:guice:3.0')
+	addr('org.eclipse.hudson:hudson-test-framework:3.0.0-RC4', 'jenkins-test-harness')
+	addr('org.eclipse.hudson:hudson-core:3.0.0-RC4', 'jenkins-core')
+	addr('org.powermock:powermock-module-junit4:1.5')
+	
+	# plugin parents
+	addr('org.hudsonci.plugins:analysis-pom:3.0.0-RC2')
+	addr('org.eclipse.hudson.plugins:hudson-plugin-parent:3.0.0')
+	addr('org.eclipse.hudson.plugins:hudson-plugin-parent:3.0.0', 'plugin')
+	
+	_manual = len(_repl)
+	
+	hudsonplugins = read_hudson3_plugins()
+	_central = len(hudsonplugins)
+	if not _slow:
+		_fill_replacement_map(hudsonplugins)
+	else:
+		_fill_replacement_map_slow(hudsonplugins)
 	return _repl
-"""
 
 def build_replacement_map(path):
 	dumpAsJson(path, get_replacement_map())
 
 if __name__ == '__main__':
-	_set_hard(False)
+	_set_hard(True)
+	if len(sys.argv) > 1 and sys.argv[1] == "-slow":
+		_set_slow(True)
 	build_replacement_map('./replacements.json')
 	print "%d manual additions to map" % _manual
 	print "%d added from plugin central" % _central

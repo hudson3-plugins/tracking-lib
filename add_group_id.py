@@ -8,7 +8,19 @@ from read_update_center import *
 from json_files import *
 from build_replacement_map import *
 
-repl = get_replacement_map()
+slow = False
+out = 'update-center.json'
+
+if len(sys.argv) > 1:
+	if sys.argv[1] == '-slow':
+		slow = True
+		if len(sys_argv) == 3:
+			out = sys.argv[2]
+	else:
+		out = sys.argv[1]
+		
+repl = get_replacement_map_slow() if slow else get_replacement_map()
+
 uc = read_hudson3_update_center()
 plugins = uc['plugins']
 
@@ -46,6 +58,6 @@ if len(depdeleted) > 0:
 
 dumpAsJson("deleted_dep.json", depdeleted)
 
-write_update_center('./update-center.json', uc)
+write_update_center(out, uc)
 
 
