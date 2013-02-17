@@ -1,14 +1,11 @@
 #!/usr/bin/python
 import sys, re, os, json, urllib
+from json_files import *
+from urlretrieve import *
+
 #
 # Use jenkins plugin installation trend data to derive plugin popularity ranking
 #
-
-def dumpAsJson(filename, array):
-	dump = json.dumps(array, sort_keys = True, indent = 4)
-	f = open(filename, 'w')
-	f.write(dump)
-	f.close()
 
 def gethighkey(dict):
 	high = ""
@@ -23,9 +20,7 @@ def gethighkey(dict):
 
 statpage = "http://stats.jenkins-ci.org/plugin-installation-trend/"
 
-sock = urllib.urlopen(statpage) 
-htmlSource = sock.read()                            
-sock.close()
+htmlSource = urlget(statpage) 
 
 anchors = re.findall(r'<a\s*href="([^"]*)', htmlSource)
 
@@ -55,9 +50,8 @@ for i in range(0, numanchors):
 	sys.stdout.write('.')
 	sys.stdout.flush()
 	
-	sock = urllib.urlopen(statpage+anchor) 
-	plug = json.load(sock)                        
-	sock.close()
+	jp   = urlget(statpage+anchor)
+	plug = json.loads(jp)                        
 	if plug.get("name", False):
 		name = plug["name"]
 		installTS, install = gethighkey(plug["installations"])
