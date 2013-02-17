@@ -59,10 +59,22 @@ def setscm(key, ex):
 		else:
 			ex['scm'] = 'Unknown'
 
+hlabels = set()
+jlabels = set()
+multilabels = []
+jemptylabels = []
+hemptylabels = []
+
+def addlabels(set, labels):
+	if labels:
+		for label in labels:
+			set.add(label)
+		
 extract = {}
 notinhudson = []
 notinjenkins = []
 olderinhudson = []
+
 
 for key, jplugin in jplugins.items():
 	jversion = jplugin['version']
@@ -72,27 +84,51 @@ for key, jplugin in jplugins.items():
 	ex['url'] = jplugin['url']
 	setscm(key, ex)
 	ex['diff'] = 'Same'
+	labels = jplugin.get('labels')
+	addlabels(jlabels, labels)
+	if labels and '' in labels:
+		jemptylabels.append(key)
 	if not hplugin:
 		ex['diff'] = 'Missing'
 		notinhudson.append(key)
-	if hplugin and cmpversion(hplugin['version'], jversion) < 0:
+	if hplugin is not None and cmpversion(hplugin['version'], jversion) < 0:
 		ex['diff'] = 'Older'
 		olderinhudson.append(key)
 
 for key, hplugin in hplugins.items():
+	labels = hplugin.get('labels')
+	if len(labels) > 1:
+		multilabels[key] = labels
+	if '' in labels:
+		hemptylabels.append(key)
+	addlabels(hlabels, labels)
 	if not jplugins.get(key, None):
 		# We have already added all the hudson/jenkins pairs
 		notinjenkins.append(key)
+
+difflabels = jlabels.difference(hlabels)
 
 dumpAsJson('extract.json', extract)
 dumpAsJson('notinhudson.json', notinhudson)
 dumpAsJson('notinjenkins.json', notinjenkins)
 dumpAsJson('olderinhudson.json', olderinhudson)
+dumpAsJson('hudsonlabels.json', list(hlabels))
+dumpAsJson('jenkinslabels.json', list(jlabels))
+dumpAsJson('jenkinslabelsnotinhudson.json', list(difflabels))
+dumpAsJson('hudsonmultilabels.json', multilabels)
+dumpAsJson('hudsonemptylabels.json', hemptylabels)
 
 print ' '+str(len(notinjenkins)), 'hudson plugins not in jenkins'
 print str(len(hplugins)-len(olderinhudson)-len(notinjenkins)), 'hudson plugins up to date'
 print str(len(olderinhudson)), 'hudson plugins older version'
 print str(len(notinhudson)),  'jenkins plugins not in hudson'
 print str(len(notinhudson)+len(olderinhudson)), 'jenkins plugins to convert'
+print
+print str(len(hlabels)), 'unique hudson labels (hudsonlabels.json)'
+print str(len(jlabels)), 'unique jenkins labels (jenkinslabels.json)'
+print str(len(difflabels)), 'jenkins labels not in hudson (jenkinslabelsnotinhudson.json)'
+print str(len(multilabels)), 'hudson plugins have multiple labels (hudsonmutlilabels.json)'
+print str(len(hemptylabels)), 'hudson plugins have empty labels (hudsonemptylabels.json)'
+
 						
 					

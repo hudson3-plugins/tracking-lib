@@ -9,6 +9,16 @@ from json_files import *
 from read_update_center import *
 from cmpversion import *
 
+if len(sys.argv) > 2:
+	print "Usage: ./track.py [RELATIVE_DIR_NAME]"
+	sys.exit(1)
+
+rel = ''
+if len(sys.argv) > 1:
+	rel = sys.argv[1]
+	if not rel.endswith('/'):
+		rel += '/'
+
 def read_plugins(url, who):
 	plugins = read_update_center(url)['plugins']
 	if not plugins:
@@ -93,18 +103,18 @@ print str(len(hplugins)-original), "in Jenkins"
 dumpAsJson('changes.json', changes)
 dumpAsJson('status.json', status)
 
+percentmap = loadFromJson('jinstallpercent.json')
+
 def writereport(dict, dir, title):
 	shutil.rmtree(dir, True)
 	os.makedirs(dir)
-	# job checks out code into tracking folder
-	# shutil.copyfile('tracking/newspaper.css', dir+'/newspaper.css')
 	f = open(dir+'/index.html', 'w')
 	print >>f, '<html>'
 	print >>f, '<head>'
 	print >>f, '<title>'+title+'</title>'
 	# print >>f, '<link rel="stylesheet" type="text/css" href="newspaper.css">'
 	print >>f, '<style type="text/css">'
-	css = open('tracking/newspaper.css')
+	css = open(rel+'newspaper.css')
 	for line in css:
 		print >>f, line.rstrip()
 	css.close()
@@ -126,9 +136,20 @@ def writereport(dict, dir, title):
 			hversion = row['hversion']
 			jversion = row['jversion']
 			td = '<td>'
+			needtoknow = False
 			if cmpversion(hversion, jversion) < 0:
-				td = '<td bgcolor="#FFFFCC">'
-			if row['hversion'] != 'None':
+				color = "#FDFFE9" # pastel yellow
+				if percentmap is not None:
+					percent = percentmap.get(key, None)
+					if percent:
+						if percent >= 5.0:
+							color = "#FFCBE2" # pastel red
+							needtoknow = True
+						elif percent >= 2.0:
+							color = "#FFD5BF" # pastel amber
+							needtoknow = True
+				td = '<td bgcolor="%s">' % color
+			if row['hversion'] != 'None' or needtoknow:
 				print >>f, '<tr>'
 				print >>f, td+key+'</td>'
 				print >>f, td+hversion+'</td>'
