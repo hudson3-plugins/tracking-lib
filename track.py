@@ -105,6 +105,31 @@ dumpAsJson('status.json', status)
 
 percentmap = loadFromJson('jinstallpercent.json')
 
+legend = [
+  '<canvas id="myCanvas" width="400" height="30" style="border:1px solid #c3c3c3;">',
+  'Your browser does not support the HTML5 canvas tag.',
+  '</canvas>',
+  '<script>',
+  'var c=document.getElementById("myCanvas");',
+  'var ctx=c.getContext("2d");',
+  'ctx.fillStyle="#FFCBE2";',
+  'ctx.fillRect(0,0,100,150);',
+  'ctx.fillStyle="#FFD5BF";',
+  'ctx.fillRect(100,0,100,150);',
+  'ctx.fillStyle="#FDFFE9";',
+  'ctx.fillRect(200,0,100,150);',
+  'ctx.fillStyle="#000";',
+  'ctx.font = " 16px sans-serif";',
+  'ctx.textAlign = "center";',
+  'ctx.textBaseline="top";',
+  'ctx.fillText("95%", 50, 7);',
+  'ctx.fillText("98%", 150, 7);',
+  'ctx.fillText("100%", 250, 7);',
+  'ctx.font = " 16px sans-serif";',
+  'ctx.fillText("Up To Date", 350, 7);',
+  '</script>'
+  ]
+  
 def writereport(dict, dir, title):
 	shutil.rmtree(dir, True)
 	os.makedirs(dir)
@@ -156,6 +181,9 @@ def writereport(dict, dir, title):
 				print >>f, td+jversion+'</td>'
 				print >>f, '</tr>'
 		print >>f, '</table>'
+	print >>f, "<h4>Legend:</h4>"
+	for line in legend:
+	  print >>f, line
 	print >>f, '</body>'
 	print >>f, '</html>'
 	f.close()
