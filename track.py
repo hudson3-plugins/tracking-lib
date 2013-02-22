@@ -106,7 +106,7 @@ dumpAsJson('status.json', status)
 percentmap = loadFromJson('jinstallpercent.json')
 
 legend = [
-  '<canvas id="myCanvas" width="480" height="30" style="border:1px solid #c3c3c3;">',
+  '<canvas id="myCanvas" width="478" height="30" style="border:1px solid #c3c3c3;">',
   'Your browser does not support the HTML5 canvas tag.',
   '</canvas>',
   '<script>',
