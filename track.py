@@ -107,7 +107,14 @@ percentmap = loadFromJson('jinstallpercent.json')
 
 legend = [
   '<canvas id="myCanvas" width="478" height="30" style="border:1px solid #c3c3c3;">',
-  'Your browser does not support the HTML5 canvas tag.',
+  '<table>',
+  '<tr>',
+  '<td bgcolor="#FFCBE2">Top 95%</td>',
+  '<td bgcolor="#FFD5BF">Top 98%</td>',
+  '<td bgcolor="#FDFFE9">All Others</td>',
+  '<td>Up To Date</td>',
+  '</tr>',
+  '</table>',
   '</canvas>',
   '<script>',
   'var c=document.getElementById("myCanvas");',
@@ -123,9 +130,9 @@ legend = [
   'ctx.font = " 16px sans-serif";',
   'ctx.textAlign = "center";',
   'ctx.textBaseline="top";',
-  'ctx.fillText("95%", 60, 7);',
-  'ctx.fillText("98%", 180, 7);',
-  'ctx.fillText("100%", 300, 7);',
+  'ctx.fillText("Top 95%", 60, 7);',
+  'ctx.fillText("Top 98%", 180, 7);',
+  'ctx.fillText("All Others", 300, 7);',
   'ctx.fillText("Up To Date", 420, 7);',
   '</script>'
   ]
@@ -185,6 +192,8 @@ def writereport(dict, dir, title):
 	print >>f, '<p>Legend:</p>'
 	for line in legend:
 	  print >>f, line
+	for i in range(1,9):
+	  print >>f, legend[i]
 	print >>f, '</div>'
 	print >>f, '</body>'
 	print >>f, '</html>'
