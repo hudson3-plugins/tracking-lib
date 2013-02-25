@@ -192,8 +192,6 @@ def writereport(dict, dir, title):
 	print >>f, '<p>Legend:</p>'
 	for line in legend:
 	  print >>f, line
-	for i in range(1,9):
-	  print >>f, legend[i]
 	print >>f, '</div>'
 	print >>f, '</body>'
 	print >>f, '</html>'
