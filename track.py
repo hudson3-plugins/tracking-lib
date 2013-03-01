@@ -59,7 +59,7 @@ for key, jplugin in jplugins.items():
 	jversion = jplugin['version']
 	hplugin = hplugins.get(key, None)
 	splugin = status.get(key, None)
-	if featured[key] is not None:
+	if featured.get(key, None) is not None:
 	  continue;
 	if hplugin and (not splugin or not splugin.get('jversion', None) or cmpversion(splugin['jversion'], jversion) != 0):
 		hversion = hplugin['version']
@@ -121,7 +121,7 @@ legend = [
   '<tr>',
   '<td bgcolor="#FFCBE2">Top 95%</td>',
   '<td bgcolor="#FFD5BF">Top 98%</td>',
-  '<td bgcolor="#FDFFE9">All Others</td>',
+  '<td bgcolor="#FDFFBB">All Others</td>',
   '<td>Up To Date</td>',
   '</tr>',
   '</table>',
@@ -133,7 +133,7 @@ legend = [
   'ctx.fillRect(0,0,120,150);',
   'ctx.fillStyle="#FFD5BF";',
   'ctx.fillRect(120,0,120,150);',
-  'ctx.fillStyle="#FDFFE9";',
+  'ctx.fillStyle="#FDFFBB";',
   'ctx.fillRect(240,0,120,150);',
   
   'ctx.fillStyle="#039";',
@@ -180,7 +180,7 @@ def writereport(dict, dir, title):
 			td = '<td>'
 			needtoknow = False
 			if cmpversion(hversion, jversion) < 0:
-				color = "#FDFFE9" # pastel yellow
+				color = "#FDFFBB" # pastel yellow
 				if percentmap is not None:
 					percent = percentmap.get(key, None)
 					if percent:
