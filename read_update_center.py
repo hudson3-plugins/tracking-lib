@@ -24,7 +24,7 @@ def get_proxy_map():
 
 def read_update_center(url):
 	file = urllib.urlopen(url, None, get_proxy_map())
-	text = file.read()
+	text = file.read().strip()
 	file.close()
 	if text.startswith('updateCenter.post(') and text.endswith(');'):
 		js = text[len('updateCenter.post('): -2].strip()
@@ -58,5 +58,9 @@ if __name__ == '__main__':
 	url = "http://hudson-ci.org/update-center3/update-center.json"
 	if nargs == 3:
 		url = sys.argv[2]
+	if url == 'hudson':
+	  url = "http://hudson-ci.org/update-center3/update-center.json"
+	elif url == 'jenkins':
+	  url = "http://updates.jenkins-ci.org/update-center.json"
 	uc = read_update_center(url)
 	dumpAsJson(sys.argv[1], uc)
