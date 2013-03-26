@@ -1,0 +1,17 @@
+[
+  "deploy",
+  "cvs",
+  "git",
+  "groovy-support-plugin",
+  "maven-plugin",
+  "maven3-plugin",
+  "maven3-snapshots",
+  "rest-plugin",
+  "ssh-slaves",
+  "subversion",
+  "translation",
+  "windows-slaves-plugin",
+  "jna-native-support-plugin",
+  "birt-charts",
+  "jfreechart-plugin"
+]

@@ -35,6 +35,8 @@ print str(len(hplugins)), 'plugins in hudson  update center'
 status = loadFromJson('status.json')
 if not status:
 	status = {}
+	
+donotupdate = set(loadFromJson('donotupdate.json'))
 
 changes = {}
 defaulthplugin = {}
@@ -47,19 +49,14 @@ forkedolder = 0
 forkeduptodate = 0
 forkedpattern = re.compile(r"-h-[0-9]")
 original = 0
-
-featured = {}
-
-for key, hplugin in hplugins.items():
-  type = hplugin.get('type', '')
-  if type == 'featured':
-    featured[key] = hplugin
+featured = 0
 
 for key, jplugin in jplugins.items():
 	jversion = jplugin['version']
 	hplugin = hplugins.get(key, None)
 	splugin = status.get(key, None)
-	if featured.get(key, None) is not None:
+	if key in donotupdate:
+	  featured += 1
 	  continue;
 	if hplugin and (not splugin or not splugin.get('jversion', None) or cmpversion(splugin['jversion'], jversion) != 0):
 		hversion = hplugin['version']
@@ -108,7 +105,7 @@ for key, hplugin in hplugins.items():
 print "Of", str(len(hplugins)), "Hudson 3 plugins"
 print str(original), "not in Jenkins"
 print str(len(hplugins)-original), "in Jenkins"
-print str(len(featured)), "'featured' plugins in Hudson skipped"
+print featured, "donotadd plugins in Hudson skipped"
 
 dumpAsJson('changes.json', changes)
 dumpAsJson('status.json', status)
