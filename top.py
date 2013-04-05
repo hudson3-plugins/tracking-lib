@@ -94,6 +94,7 @@ def perc(install):
 slstats = sorted(lstats, key=lambda t: t[1], reverse=True)
 
 jinstallpercent = {}
+jinstall = {}
 lines = []
 for i in range(0,len(slstats)):
 	tuple = slstats[i]
@@ -101,8 +102,12 @@ for i in range(0,len(slstats)):
 	if percent >= bot:
 		lines.append("{:>3d} {:<40} {:>8d} {:>7.2f}".format(i+1, tuple[0], tuple[1], percent))
 	jinstallpercent[tuple[0]] = percent
+	jinstall[tuple[0]] = t = {}
+	t['num'] = tuple[1]
+	t['perc'] = percent
 
 dumpAsJson("jinstallpercent.json", jinstallpercent)
+dumpAsJson("jinstall.json", jinstall)
 
 #----------------------------------------------------------
 # Print the requested top n%.
