@@ -36,7 +36,7 @@ status = loadFromJson('status.json')
 if not status:
 	status = {}
 	
-donotupdate = set(loadFromJson('donotupdate.json'))
+donotupdate = set(loadFromJson(rel+'donotupdate.json'))
 
 changes = {}
 defaulthplugin = {}
