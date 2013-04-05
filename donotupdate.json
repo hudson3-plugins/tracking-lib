@@ -13,5 +13,6 @@
   "windows-slaves-plugin",
   "jna-native-support-plugin",
   "birt-charts",
-  "jfreechart-plugin"
+  "jfreechart-plugin",
+  "ant"
 ]
